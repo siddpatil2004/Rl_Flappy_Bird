@@ -74,16 +74,6 @@ with st.sidebar:
     sim_speed = st.slider("Simulation speed", 1, 20, 1, 1)
     mut_rate = st.slider("Mutation rate (%)", 1, 50, 10, 1)
     st.markdown("---")
-    st.markdown("**How it works**")
-    st.markdown("""
-Each bird has a tiny neural net:
-- **5 inputs**: y position, velocity, pipe distance, gap top, gap bottom
-- **4 hidden** neurons (tanh)
-- **1 output**: jump or hold
-
-After all birds die, the top 5 survivors breed the next generation via weight mutation.
-    """)
-    st.markdown("---")
     st.markdown("**Tips**")
     st.markdown("""
 - Crank speed to **10–20x** to skip early chaos
@@ -169,23 +159,17 @@ class NNet {{
   }}
 }}
 
-const GRAV=0.38, JUMP=-7, BR=11, PIPE_W=52, PIPE_SPEED=2.4;
+const GRAV=0.38, JUMP=-7, BR=11;
 
 function mkBird(net) {{
   return {{x:80,y:H/2,vy:0,alive:true,fitness:0,net:net||new NNet()}};
 }}
 
-let birds=[], pipes=[], frameN=0, score=0, generation=1, bestScore=0;
+let birds=[], frameN=0, generation=1, bestScore=0;
 let fitnessHistory=[];
-
-function addPipe() {{
-  let top = 85 + Math.random()*(H-145-80);
-  pipes.push({{x:W+20,top,bot:top+145,passed:false}});
-}}
 
 function initPop(size) {{
   birds = Array.from({{length:size}},()=>mkBird());
-  pipes=[]; frameN=0; score=0; addPipe();
 }}
 
 function evolve() {{
@@ -201,17 +185,11 @@ function evolve() {{
     let p = top5[Math.floor(Math.random()*top5.length)];
     nb.push(mkBird(p.net.mutate(MUT_RATE)));
   }}
-  birds=nb; pipes=[]; frameN=0; score=0; addPipe();
+  birds=nb;
 }}
 
 function step() {{
   frameN++;
-  if (frameN%82===0) addPipe();
-  for (let p of pipes) p.x -= PIPE_SPEED;
-  pipes = pipes.filter(p=>p.x>-PIPE_W-10);
-
-  let np = pipes[0];
-
   for (let b of birds) {{
     if (!b.alive) continue;
     b.fitness=frameN;
@@ -230,12 +208,10 @@ function step() {{
   document.getElementById('bestVal').textContent=bestScore;
   document.getElementById('aliveVal').textContent=aliveCount+' / '+POP_SIZE;
   document.getElementById('aliveBar').style.width=Math.round(aliveCount/POP_SIZE*100)+'%';
-  document.getElementById('statusBar').textContent='gen '+generation+' · '+aliveCount+' alive';
 }}
 
 function drawGame() {{
   ctx.fillStyle='#0a0f1a'; ctx.fillRect(0,0,W,H);
-
   for (let b of birds) {{
     ctx.beginPath();
     ctx.arc(b.x,b.y,BR,0,Math.PI*2);
